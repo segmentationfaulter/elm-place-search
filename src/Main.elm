@@ -1,7 +1,7 @@
 module Main exposing (Model, Msg(..), PlacePrediction, getAutoCompleteSuggestions, getPlacesApiEndpoint, init, initialModel, main, placePredictionDecoder, placesPredictionsDecoder, subscriptions, update, view)
 
 import Browser
-import Html exposing (Attribute, Html, div, input)
+import Html exposing (Attribute, Html, div, input, h1, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onInput)
 import Http
@@ -73,7 +73,8 @@ update msg _ =
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "Enter place name", type_ "text", value (String.toUpper model.query), onInput QueryChanged ] []
+        [
+            h1 [] [text "Find a place"]
         ]
 
 
