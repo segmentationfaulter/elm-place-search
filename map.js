@@ -5,8 +5,11 @@ export function initMap(app) {
       zoom: 10
     });
     var input = document.getElementById("input-autocomplete");
+    var marker = new google.maps.Marker({ map: map });
+
     app.ports.centerMap.subscribe((location) => {
       map.setCenter(location);
+      marker.setPosition(location)
     })
 
     var autocomplete = new google.maps.places.Autocomplete(input);
@@ -21,13 +24,6 @@ export function initMap(app) {
           lng: place.geometry.location.lng()
         }
       })
-      
-      var marker = new google.maps.Marker({ map: map });
-      marker.setPlace({
-        placeId: place.place_id,
-        location: place.geometry.location
-      });
-      marker.setVisible(true);
     });
   };
 }
