@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Html exposing (Html, div, h1, text)
 import Json.Decode exposing (Decoder, decodeValue, field, string, float, map2, map3)
-import Maps exposing (onPlaceChange)
+import Maps exposing (onPlaceChange, centerMap)
 import Json.Encode as Encode
 import Maybe
 
@@ -62,7 +62,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PlaceChanged placeResult -> case (getPlace placeResult) of
-            Maybe.Just place -> (PlaceFound place, Cmd.none)
+            Maybe.Just place -> (PlaceFound place, centerMap (encodeLocation place.location))
             Maybe.Nothing -> (ErrorDecodingPlace, Cmd.none)
 
 -- View
@@ -99,6 +99,17 @@ locationDecoder = field "location" (map2 Location (field "lat" float) (field "ln
 
 placeDecoder: Decoder Place
 placeDecoder = map3 Place placeNameDecoder placeIdDecoder locationDecoder
+
+
+-- Encoders
+
+encodeLocation: Location -> Encode.Value
+encodeLocation location =
+    Encode.object
+        [
+            ("lat", Encode.float location.lat),
+            ("lng", Encode.float location.lng)
+        ]
 
 
 -- Helpers

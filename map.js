@@ -5,6 +5,9 @@ export function initMap(app) {
       zoom: 10
     });
     var input = document.getElementById("input-autocomplete");
+    app.ports.centerMap.subscribe((location) => {
+      map.setCenter(location);
+    })
 
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.setFields(["place_id", "geometry", "name"]);
@@ -18,11 +21,7 @@ export function initMap(app) {
           lng: place.geometry.location.lng()
         }
       })
-      if (!place.geometry) {
-        return;
-      }
-      map.setCenter(place.geometry.location);
-
+      
       var marker = new google.maps.Marker({ map: map });
       marker.setPlace({
         placeId: place.place_id,
