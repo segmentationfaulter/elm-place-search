@@ -38,7 +38,6 @@ type alias Location =
 type alias Place =
     {
         name: String,
-        placeId: String,
         location: Location
     }
 
@@ -91,14 +90,11 @@ subscriptions model =
 placeNameDecoder: Decoder String
 placeNameDecoder = field "name" string
 
-placeIdDecoder: Decoder String
-placeIdDecoder = field "place_id" string
-
 locationDecoder: Decoder Location
 locationDecoder = field "location" (map2 Location (field "lat" float) (field "lng" float))
 
 placeDecoder: Decoder Place
-placeDecoder = map3 Place placeNameDecoder placeIdDecoder locationDecoder
+placeDecoder = map2 Place placeNameDecoder locationDecoder
 
 
 -- Encoders
@@ -126,4 +122,4 @@ renderPlaceName model =
     case model of
         WaitingForFirstQuery -> text "We are ready to receive search requests"
         ErrorDecodingPlace -> text "There is an error encountered getting place name"
-        PlaceFound place -> text ("Hey, you have flown to " ++ place.name ++ " having ID: " ++ place.placeId)
+        PlaceFound place -> text ("Hey, you have flown to " ++ place.name)

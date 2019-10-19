@@ -13,12 +13,11 @@ export function initMap(app) {
     })
 
     var autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.setFields(["place_id", "geometry", "name"]);
+    autocomplete.setFields(["geometry", "name"]);
     autocomplete.addListener("place_changed", function() {
       var place = autocomplete.getPlace();
       app.ports.onPlaceChange.send({
         name: place.name,
-        place_id: place.place_id,
         location: {
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng()
