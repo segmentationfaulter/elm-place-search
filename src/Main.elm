@@ -1,12 +1,11 @@
-module Main exposing (Model, Msg(..), PlacePrediction, getAutoCompleteSuggestions, getPlacesApiEndpoint, init, initialModel, main, placePredictionDecoder, placesPredictionsDecoder, subscriptions, update, view)
+module Main exposing (..)
 
 import Browser
-import Html exposing (Attribute, Html, div, input, h1, text)
-import Html.Attributes exposing (placeholder, type_, value)
-import Html.Events exposing (onInput)
-import Http
-import Json.Decode exposing (Decoder, decodeString, field, list, map2, string)
-import String
+import Html exposing (Html, div, h1, text)
+import Json.Decode exposing (Decoder, decodeValue, field, string)
+import Maps exposing (onPlaceChange)
+import Json.Encode as Encode
+import Maybe exposing (..)
 
 
 main =
@@ -30,42 +29,33 @@ init () =
 
 -- Modal
 
-
-type alias Model =
-    { query : String
+type alias Place =
+    {
+        name: String
     }
+
+type Model = ErrorDecodingPlace
+    | PlaceFound Place
+    | WaitingForFirstQuery
+    
 
 
 initialModel : Model
-initialModel =
-    { query = ""
-    }
-
+initialModel = WaitingForFirstQuery
 
 
 -- Update
 
 
-type Msg
-    = QueryChanged String
-    | PlacesPredictionsReceived (Result Http.Error (List PlacePrediction))
-
+type Msg =
+    PlaceChanged Encode.Value
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
+update msg model =
     case msg of
-        QueryChanged query ->
-            ( { query = query }, getAutoCompleteSuggestions (getPlacesApiEndpoint query) )
-
-        PlacesPredictionsReceived predictionsResult ->
-            case predictionsResult of
-                Result.Ok result ->
-                    ( initialModel, Cmd.none )
-
-                Result.Err _ ->
-                    ( initialModel, Cmd.none )
-
-
+        PlaceChanged place -> case (getPlaceName place) of
+            Just placeName -> (PlaceFound { name = placeName }, Cmd.none)
+            Nothing -> (ErrorDecodingPlace, Cmd.none)
 
 -- View
 
@@ -74,7 +64,8 @@ view : Model -> Html Msg
 view model =
     div []
         [
-            h1 [] [text "Find a place"]
+            h1 [] [text "Find a place"],
+            renderPlaceName model
         ]
 
 
@@ -84,41 +75,27 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    onPlaceChange PlaceChanged
 
+
+-- Decoders
+
+placeNameDecoder: Decoder String
+placeNameDecoder = field "name" string
 
 
 -- Helpers
 
-
-getPlacesApiEndpoint : String -> String
-getPlacesApiEndpoint query =
-    let
-        key =
-            "AIzaSyClde8PpxKB0E6r5xoFf2LfDIpLNv047gw"
-    in
-    "https://maps.googleapis.com/maps/api/place/autocomplete/json?key=" ++ key ++ "&input=" ++ query
+getPlaceName: Encode.Value -> Maybe String
+getPlaceName value =
+    case (decodeValue placeNameDecoder value) of
+        Ok placeName -> Just placeName
+        Err _ -> Nothing
 
 
-getAutoCompleteSuggestions : String -> Cmd Msg
-getAutoCompleteSuggestions url =
-    Http.get
-        { url = url
-        , expect = Http.expectJson PlacesPredictionsReceived placesPredictionsDecoder
-        }
-
-
-type alias PlacePrediction =
-    { description : String
-    , place_id : String
-    }
-
-
-placesPredictionsDecoder : Decoder (List PlacePrediction)
-placesPredictionsDecoder =
-    field "predictions" (list placePredictionDecoder)
-
-
-placePredictionDecoder : Decoder PlacePrediction
-placePredictionDecoder =
-    map2 PlacePrediction (field "place_id" string) (field "description" string)
+renderPlaceName: Model -> Html Msg
+renderPlaceName model =
+    case model of
+        WaitingForFirstQuery -> text "We are ready to receive search requests"
+        ErrorDecodingPlace -> text "There is an error encountered getting place name"
+        PlaceFound place -> text ("Hey, you have flown to " ++ place.name)
