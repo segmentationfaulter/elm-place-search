@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Html, div, h1, text)
-import Json.Decode exposing (Decoder, decodeValue, field, string, float, map2, map3)
+import Json.Decode exposing (Decoder, decodeValue, field, string, float, map2)
 import Maps exposing (onPlaceChange, centerMap)
 import Json.Encode as Encode
 import Maybe
