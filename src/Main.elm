@@ -143,7 +143,7 @@ renderPlaceName : Model -> Html Msg
 renderPlaceName model =
     case model of
         WaitingForFirstQuery ->
-            text "We are ready to receive search requests"
+            text "We are ready to receive search requests, input your query in the text field below"
 
         ErrorDecodingPlace ->
             text "There is an error encountered getting place name"
