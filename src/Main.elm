@@ -2,9 +2,9 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Html, div, h1, text)
-import Json.Decode exposing (Decoder, decodeValue, field, string, float, map2)
-import Maps exposing (onPlaceChange, centerMap)
+import Json.Decode exposing (Decoder, decodeValue, field, float, map2, string)
 import Json.Encode as Encode
+import Maps exposing (centerMap, onPlaceChange)
 import Maybe
 
 
@@ -29,40 +29,50 @@ init () =
 
 -- Modal
 
+
 type alias Location =
-    {
-        lat: Float,
-        lng: Float
+    { lat : Float
+    , lng : Float
     }
+
 
 type alias Place =
-    {
-        name: String,
-        location: Location
+    { name : String
+    , location : Location
     }
 
-type Model = ErrorDecodingPlace
+
+type Model
+    = ErrorDecodingPlace
     | PlaceFound Place
     | WaitingForFirstQuery
-    
 
 
 initialModel : Model
-initialModel = WaitingForFirstQuery
+initialModel =
+    WaitingForFirstQuery
+
 
 
 -- Update
 
 
-type Msg =
-    PlaceChanged Encode.Value
+type Msg
+    = PlaceChanged Encode.Value
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PlaceChanged placeResult -> case (getPlace placeResult) of
-            Maybe.Just place -> (PlaceFound place, centerMap (encodeLocation place.location))
-            Maybe.Nothing -> (ErrorDecodingPlace, Cmd.none)
+        PlaceChanged placeResult ->
+            case getPlace placeResult of
+                Maybe.Just place ->
+                    ( PlaceFound place, centerMap (encodeLocation place.location) )
+
+                Maybe.Nothing ->
+                    ( ErrorDecodingPlace, Cmd.none )
+
+
 
 -- View
 
@@ -70,9 +80,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [
-            h1 [] [text "Find a place"],
-            renderPlaceName model
+        [ h1 [] [ text "Find a place" ]
+        , renderPlaceName model
         ]
 
 
@@ -85,41 +94,59 @@ subscriptions model =
     onPlaceChange PlaceChanged
 
 
+
 -- Decoders
 
-placeNameDecoder: Decoder String
-placeNameDecoder = field "name" string
 
-locationDecoder: Decoder Location
-locationDecoder = field "location" (map2 Location (field "lat" float) (field "lng" float))
+placeNameDecoder : Decoder String
+placeNameDecoder =
+    field "name" string
 
-placeDecoder: Decoder Place
-placeDecoder = map2 Place placeNameDecoder locationDecoder
+
+locationDecoder : Decoder Location
+locationDecoder =
+    field "location" (map2 Location (field "lat" float) (field "lng" float))
+
+
+placeDecoder : Decoder Place
+placeDecoder =
+    map2 Place placeNameDecoder locationDecoder
+
 
 
 -- Encoders
 
-encodeLocation: Location -> Encode.Value
+
+encodeLocation : Location -> Encode.Value
 encodeLocation location =
     Encode.object
-        [
-            ("lat", Encode.float location.lat),
-            ("lng", Encode.float location.lng)
+        [ ( "lat", Encode.float location.lat )
+        , ( "lng", Encode.float location.lng )
         ]
+
 
 
 -- Helpers
 
-getPlace: Encode.Value -> Maybe.Maybe Place
+
+getPlace : Encode.Value -> Maybe.Maybe Place
 getPlace value =
-    case (decodeValue placeDecoder value) of
-        Ok placeName -> Just placeName
-        Err _ -> Nothing
+    case decodeValue placeDecoder value of
+        Ok placeName ->
+            Just placeName
+
+        Err _ ->
+            Nothing
 
 
-renderPlaceName: Model -> Html Msg
+renderPlaceName : Model -> Html Msg
 renderPlaceName model =
     case model of
-        WaitingForFirstQuery -> text "We are ready to receive search requests"
-        ErrorDecodingPlace -> text "There is an error encountered getting place name"
-        PlaceFound place -> text ("Hey, you have flown to " ++ place.name)
+        WaitingForFirstQuery ->
+            text "We are ready to receive search requests"
+
+        ErrorDecodingPlace ->
+            text "There is an error encountered getting place name"
+
+        PlaceFound place ->
+            text ("Hey, you have flown to " ++ place.name)
