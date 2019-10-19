@@ -2,10 +2,9 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Html, div, h1, text)
-import Json.Decode exposing (Decoder, decodeValue, field, float, map2, string)
+import Json.Decode exposing (Decoder, Error, decodeValue, field, float, map2, string)
 import Json.Encode as Encode
 import Maps exposing (centerMap, onPlaceChange)
-import Maybe
 
 
 main =
@@ -64,12 +63,12 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PlaceChanged placeResult ->
-            case getPlace placeResult of
-                Maybe.Just place ->
+        PlaceChanged placeValue ->
+            case getPlaceResult placeValue of
+                Ok place ->
                     ( PlaceFound place, centerMap (encodeLocation place.location) )
 
-                Maybe.Nothing ->
+                Err _ ->
                     ( ErrorDecodingPlace, Cmd.none )
 
 
@@ -129,14 +128,9 @@ encodeLocation location =
 -- Helpers
 
 
-getPlace : Encode.Value -> Maybe.Maybe Place
-getPlace value =
-    case decodeValue placeDecoder value of
-        Ok placeName ->
-            Just placeName
-
-        Err _ ->
-            Nothing
+getPlaceResult : Encode.Value -> Result Error Place
+getPlaceResult value =
+    decodeValue placeDecoder value
 
 
 renderPlaceName : Model -> Html Msg
