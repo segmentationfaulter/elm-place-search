@@ -1,8 +1,8 @@
-To launch dev server, run the follwoing commands:
+Use your API key allowing access to JavaScript Maps API and Places API, then run the followings to launch dev server:
 
 ```
 npm install
 npm run dev
 ```
 
-and then open `localhost:1234` to play with the app.
+open `localhost:1234` to play with the app.
