@@ -7,10 +7,10 @@ export function initMap(app) {
     var input = document.getElementById("input-autocomplete");
     var marker = new google.maps.Marker({ map: map });
 
-    app.ports.centerMap.subscribe((location) => {
+    app.ports.centerMap.subscribe(location => {
       map.setCenter(location);
-      marker.setPosition(location)
-    })
+      marker.setPosition(location);
+    });
 
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.setFields(["geometry", "name"]);
@@ -22,7 +22,7 @@ export function initMap(app) {
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng()
         }
-      })
+      });
     });
   };
 }

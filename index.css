@@ -1,13 +1,13 @@
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 #map {
-    height: 500px;
+  height: 500px;
 }
 
 #input-autocomplete {
-    width: 400px;
-    height: 30px;
-    margin-bottom: 20px;
+  width: 400px;
+  height: 30px;
+  margin-bottom: 20px;
 }
