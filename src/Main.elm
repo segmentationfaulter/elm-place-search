@@ -2,10 +2,10 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Html, div, h1, text)
-import Json.Decode exposing (Decoder, decodeValue, field, string)
+import Json.Decode exposing (Decoder, decodeValue, field, string, map2)
 import Maps exposing (onPlaceChange)
 import Json.Encode as Encode
-import Maybe exposing (..)
+import Maybe
 
 
 main =
@@ -31,7 +31,8 @@ init () =
 
 type alias Place =
     {
-        name: String
+        name: String,
+        placeId: String
     }
 
 type Model = ErrorDecodingPlace
@@ -53,9 +54,9 @@ type Msg =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PlaceChanged place -> case (getPlaceName place) of
-            Just placeName -> (PlaceFound { name = placeName }, Cmd.none)
-            Nothing -> (ErrorDecodingPlace, Cmd.none)
+        PlaceChanged placeResult -> case (getPlace placeResult) of
+            Maybe.Just place -> (PlaceFound place, Cmd.none)
+            Maybe.Nothing -> (ErrorDecodingPlace, Cmd.none)
 
 -- View
 
@@ -83,12 +84,18 @@ subscriptions model =
 placeNameDecoder: Decoder String
 placeNameDecoder = field "name" string
 
+placeIdDecoder: Decoder String
+placeIdDecoder = field "place_id" string
+
+placeDecoder: Decoder Place
+placeDecoder = map2 Place placeNameDecoder placeIdDecoder
+
 
 -- Helpers
 
-getPlaceName: Encode.Value -> Maybe String
-getPlaceName value =
-    case (decodeValue placeNameDecoder value) of
+getPlace: Encode.Value -> Maybe.Maybe Place
+getPlace value =
+    case (decodeValue placeDecoder value) of
         Ok placeName -> Just placeName
         Err _ -> Nothing
 
@@ -98,4 +105,4 @@ renderPlaceName model =
     case model of
         WaitingForFirstQuery -> text "We are ready to receive search requests"
         ErrorDecodingPlace -> text "There is an error encountered getting place name"
-        PlaceFound place -> text ("Hey, you have flown to " ++ place.name)
+        PlaceFound place -> text ("Hey, you have flown to " ++ place.name ++ " having ID: " ++ place.placeId)
