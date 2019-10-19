@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Html, div, h1, text)
-import Json.Decode exposing (Decoder, decodeValue, field, string, map2)
+import Json.Decode exposing (Decoder, decodeValue, field, string, float, map2, map3)
 import Maps exposing (onPlaceChange)
 import Json.Encode as Encode
 import Maybe
@@ -29,10 +29,17 @@ init () =
 
 -- Modal
 
+type alias Location =
+    {
+        lat: Float,
+        lng: Float
+    }
+
 type alias Place =
     {
         name: String,
-        placeId: String
+        placeId: String,
+        location: Location
     }
 
 type Model = ErrorDecodingPlace
@@ -87,8 +94,11 @@ placeNameDecoder = field "name" string
 placeIdDecoder: Decoder String
 placeIdDecoder = field "place_id" string
 
+locationDecoder: Decoder Location
+locationDecoder = field "location" (map2 Location (field "lat" float) (field "lng" float))
+
 placeDecoder: Decoder Place
-placeDecoder = map2 Place placeNameDecoder placeIdDecoder
+placeDecoder = map3 Place placeNameDecoder placeIdDecoder locationDecoder
 
 
 -- Helpers
