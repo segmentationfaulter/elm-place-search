@@ -1,4 +1,4 @@
-Use your API key allowing access to JavaScript Maps API and Places API, then run the followings to launch dev server:
+Use your API key allowing access to JavaScript Maps API and Places API in `index.html`, then run the followings to launch dev server:
 
 ```
 npm install
