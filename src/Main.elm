@@ -1,10 +1,12 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, h1, text)
+import Html
+import Html.Attributes as Attr
+import Html.Events as Events
 import Json.Decode exposing (Decoder, Error, decodeValue, field, float, map2, string)
 import Json.Encode as Encode
-import Maps exposing (centerMap, onPlaceChange)
+import Maps exposing (centerMap, onPlaceChange, askForPlacePredictions)
 
 
 main =
@@ -41,15 +43,14 @@ type alias Place =
     }
 
 
-type Model
-    = ErrorDecodingPlace
-    | PlaceFound Place
-    | WaitingForFirstQuery
-
+type alias Model =
+    { inputText: String
+    }
 
 initialModel : Model
 initialModel =
-    WaitingForFirstQuery
+    {inputText = ""
+    }
 
 
 
@@ -58,6 +59,7 @@ initialModel =
 
 type Msg
     = PlaceChanged Encode.Value
+    | InputChanged String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,23 +68,48 @@ update msg model =
         PlaceChanged placeValue ->
             case getPlaceResult placeValue of
                 Ok place ->
-                    ( PlaceFound place, centerMap (encodeLocation place.location) )
+                    ( model, centerMap (encodeLocation place.location) )
 
                 Err _ ->
-                    ( ErrorDecodingPlace, Cmd.none )
+                    ( model, Cmd.none )
+        InputChanged inputText -> ({ initialModel | inputText = inputText }, askForPlacePredictions (Encode.string inputText))
 
 
 
 -- View
 
 
-view : Model -> Html Msg
+view : Model -> Html.Html Msg
 view model =
-    div []
-        [ h1 [] [ text "Find a place" ]
-        , renderPlaceName model
+    Html.div []
+        [ Html.h1 [] [ Html.text "Find a place" ]
+        , renderAutoCompleteInput model
+        , Html.div [Attr.id "map"] []
         ]
 
+
+renderAutoCompleteInput : Model -> Html.Html Msg
+renderAutoCompleteInput model =
+    Html.div []
+        [ Html.input [Attr.type_ "text", Attr.placeholder "Enter a location", Attr.id "input-autocomplete", Events.onInput InputChanged, Attr.value model.inputText] []
+        ]
+
+
+{-
+
+renderPlaceName : Model -> Html.Html Msg
+renderPlaceName model =
+    case model of
+        WaitingForFirstQuery ->
+            Html.text "We are ready to receive search requests, input your query in the text field below"
+
+        ErrorDecodingPlace ->
+            Html.text "There is an error encountered getting place name"
+
+        PlaceFound place ->
+            Html.text ("Hey, you have flown to " ++ place.name)
+
+-}
 
 
 -- Subscription
@@ -132,15 +159,3 @@ getPlaceResult : Encode.Value -> Result Error Place
 getPlaceResult value =
     decodeValue placeDecoder value
 
-
-renderPlaceName : Model -> Html Msg
-renderPlaceName model =
-    case model of
-        WaitingForFirstQuery ->
-            text "We are ready to receive search requests, input your query in the text field below"
-
-        ErrorDecodingPlace ->
-            text "There is an error encountered getting place name"
-
-        PlaceFound place ->
-            text ("Hey, you have flown to " ++ place.name)

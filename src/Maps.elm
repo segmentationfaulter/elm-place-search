@@ -7,3 +7,6 @@ port onPlaceChange : (Encode.Value -> msg) -> Sub msg
 
 
 port centerMap : Encode.Value -> Cmd msg
+
+
+port askForPlacePredictions : Encode.Value -> Cmd msg

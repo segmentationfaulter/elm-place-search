@@ -4,25 +4,26 @@ export function initMap(app) {
       center: { lat: -33.8688, lng: 151.2195 },
       zoom: 10
     });
-    const input = document.getElementById("input-autocomplete");
     const marker = new google.maps.Marker({ map: map });
+    const autoCompleteService = new google.maps.places.AutocompleteService();
 
-    app.ports.centerMap.subscribe(location => {
-      map.setCenter(location);
-      marker.setPosition(location);
-    });
-
-    const autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.setFields(["geometry", "name"]);
-    autocomplete.addListener("place_changed", function() {
-      const place = autocomplete.getPlace();
-      app.ports.onPlaceChange.send({
-        name: place.name,
-        location: {
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
-        }
+    app.ports.askForPlacePredictions.subscribe(input => {
+      getPredictions(input).then(predictions => {
+        console.log(predictions);
       });
     });
+
+    function centerMap(location) {
+      map.setCenter(location);
+      marker.setPosition(location);
+    }
+
+    function getPredictions(input) {
+      return new Promise(resolve => {
+        autoCompleteService.getPlacePredictions({ input }, predictions => {
+          resolve(predictions);
+        });
+      });
+    }
   };
 }
