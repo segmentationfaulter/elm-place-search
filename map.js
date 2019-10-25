@@ -10,6 +10,7 @@ export function initMap(app) {
     app.ports.askForPlacePredictions.subscribe(input => {
       getPredictions(input).then(predictions => {
         console.log(predictions);
+        app.ports.fetchPlacesPredictions.send(predictions)
       });
     });
 
