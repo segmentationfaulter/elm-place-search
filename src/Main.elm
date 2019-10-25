@@ -73,7 +73,7 @@ initialModel =
 type Msg
     = InputChanged String
     | GotPlacesPredictions Encode.Value
-    | CloseDropdown
+    | SetPredictionsVisibility Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,13 +105,13 @@ update msg model =
                 UserIsInteracting afterQueryState ->
                     ( UserIsInteracting { afterQueryState | predictions = getPredictionsResult predictionsValue }, Cmd.none )
 
-        CloseDropdown ->
+        SetPredictionsVisibility visible ->
             case model of
                 ReadyForFirstQuery ->
                     ( ReadyForFirstQuery, Cmd.none )
 
                 UserIsInteracting afterQueryState ->
-                    ( UserIsInteracting { afterQueryState | showPredictions = False }, Cmd.none )
+                    ( UserIsInteracting { afterQueryState | showPredictions = visible }, Cmd.none )
 
 
 
@@ -136,7 +136,8 @@ renderAutoCompleteInput model =
             , Attr.placeholder "Enter a location"
             , Attr.id "input-autocomplete"
             , Events.onInput InputChanged
-            , Events.onBlur CloseDropdown
+            , Events.onFocus (SetPredictionsVisibility True)
+            , Events.onBlur (SetPredictionsVisibility False)
             , Attr.value
                 (case model of
                     ReadyForFirstQuery ->
