@@ -52,6 +52,7 @@ type alias Prediction =
 type alias AfterQueryState =
     { textInput : String
     , predictions : Result Error (List Prediction)
+    , showPredictions : Bool
     }
 
 
@@ -72,6 +73,7 @@ initialModel =
 type Msg
     = InputChanged String
     | GotPlacesPredictions Encode.Value
+    | CloseDropdown
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -80,20 +82,20 @@ update msg model =
         InputChanged input ->
             case model of
                 ReadyForFirstQuery ->
-                    ( UserIsInteracting (AfterQueryState input (Ok [])), askForPlacePredictions (Encode.string input) )
+                    ( UserIsInteracting (AfterQueryState input (Ok []) True), askForPlacePredictions (Encode.string input) )
 
-                UserIsInteracting { predictions } ->
+                UserIsInteracting afterQueryState ->
                     case input of
                         "" ->
-                            case predictions of
+                            case afterQueryState.predictions of
                                 Ok _ ->
-                                    ( UserIsInteracting { textInput = input, predictions = Ok [] }, Cmd.none )
+                                    ( UserIsInteracting (AfterQueryState input (Ok []) True), Cmd.none )
 
                                 Err _ ->
-                                    ( UserIsInteracting { textInput = input, predictions = predictions }, Cmd.none )
+                                    ( UserIsInteracting { afterQueryState | textInput = input }, Cmd.none )
 
                         _ ->
-                            ( UserIsInteracting { textInput = input, predictions = predictions }, askForPlacePredictions (Encode.string input) )
+                            ( UserIsInteracting { afterQueryState | textInput = input }, askForPlacePredictions (Encode.string input) )
 
         GotPlacesPredictions predictionsValue ->
             case model of
@@ -102,6 +104,14 @@ update msg model =
 
                 UserIsInteracting afterQueryState ->
                     ( UserIsInteracting { afterQueryState | predictions = getPredictionsResult predictionsValue }, Cmd.none )
+
+        CloseDropdown ->
+            case model of
+                ReadyForFirstQuery ->
+                    ( ReadyForFirstQuery, Cmd.none )
+
+                UserIsInteracting afterQueryState ->
+                    ( UserIsInteracting { afterQueryState | showPredictions = False }, Cmd.none )
 
 
 
@@ -126,6 +136,7 @@ renderAutoCompleteInput model =
             , Attr.placeholder "Enter a location"
             , Attr.id "input-autocomplete"
             , Events.onInput InputChanged
+            , Events.onBlur CloseDropdown
             , Attr.value
                 (case model of
                     ReadyForFirstQuery ->
@@ -145,17 +156,22 @@ renderPlacePredictions model =
         ReadyForFirstQuery ->
             Html.text ""
 
-        UserIsInteracting { predictions, textInput } ->
-            case predictions of
-                Ok predictionsList ->
-                    if String.length textInput > 0 then
-                        Html.div [ Attr.class "predictions-list" ] (List.map (\{ description } -> Html.div [ Attr.class "predictions-item" ] [ Html.text description ]) predictionsList)
+        UserIsInteracting { predictions, textInput, showPredictions } ->
+            if
+                showPredictions
+            then
+                case predictions of
+                    Ok predictionsList ->
+                        if String.length textInput > 0 then
+                            Html.div [ Attr.class "predictions-list" ] (List.map (\{ description } -> Html.div [ Attr.class "predictions-item" ] [ Html.text description ]) predictionsList)
 
-                    else
-                        Html.text ""
+                        else
+                            Html.text ""
 
-                Err _ ->
-                    Html.text "Houston, we have a problem!"
+                    Err _ ->
+                        Html.text "Houston, we have a problem!"
+            else
+                Html.text ""
 
 
 
