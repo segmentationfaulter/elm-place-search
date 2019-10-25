@@ -139,7 +139,7 @@ renderPlacePredictions model =
             case predictions of
                 Ok predictionsList ->
                     if String.length textInput > 0 then
-                        Html.div [] (List.map (\{ description } -> Html.div [] [ Html.text description ]) predictionsList)
+                        Html.div [Attr.class "predictions-list"] (List.map (\{ description } -> Html.div [Attr.class "predictions-item"] [ Html.text description ]) predictionsList)
 
                     else
                         Html.text ""

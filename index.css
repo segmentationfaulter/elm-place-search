@@ -11,3 +11,16 @@
   height: 30px;
   margin-bottom: 20px;
 }
+
+.predictions-list {
+  width: 400px;
+  position: absolute;
+  z-index: 10;
+  background: white;
+}
+
+.predictions-item {
+  padding: 5px 0;
+  cursor: pointer;
+  margin-bottom: 3px;
+}
