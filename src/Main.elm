@@ -83,7 +83,17 @@ update msg model =
                     ( UserIsInteracting (AfterQueryState input (Ok [])), askForPlacePredictions (Encode.string input) )
 
                 UserIsInteracting { predictions } ->
-                    ( UserIsInteracting { textInput = input, predictions = setPredictions input predictions }, askForPlacePredictions (Encode.string input) )
+                    case input of
+                        "" ->
+                            case predictions of
+                                Ok _ ->
+                                    ( UserIsInteracting { textInput = input, predictions = Ok [] }, Cmd.none )
+
+                                Err _ ->
+                                    ( UserIsInteracting { textInput = input, predictions = predictions }, Cmd.none )
+
+                        _ ->
+                            ( UserIsInteracting { textInput = input, predictions = predictions }, askForPlacePredictions (Encode.string input) )
 
         GotPlacesPredictions predictionsValue ->
             case model of
@@ -139,7 +149,7 @@ renderPlacePredictions model =
             case predictions of
                 Ok predictionsList ->
                     if String.length textInput > 0 then
-                        Html.div [Attr.class "predictions-list"] (List.map (\{ description } -> Html.div [Attr.class "predictions-item"] [ Html.text description ]) predictionsList)
+                        Html.div [ Attr.class "predictions-list" ] (List.map (\{ description } -> Html.div [ Attr.class "predictions-item" ] [ Html.text description ]) predictionsList)
 
                     else
                         Html.text ""
@@ -149,21 +159,6 @@ renderPlacePredictions model =
 
 
 
-{-
-
-   renderPlaceName : Model -> Html.Html Msg
-   renderPlaceName model =
-       case model of
-           WaitingForFirstQuery ->
-               Html.text "We are ready to receive search requests, input your query in the text field below"
-
-           ErrorDecodingPlace ->
-               Html.text "There is an error encountered getting place name"
-
-           PlaceFound place ->
-               Html.text ("Hey, you have flown to " ++ place.name)
-
--}
 -- Subscription
 
 
@@ -220,18 +215,3 @@ getPlaceResult value =
 getPredictionsResult : Encode.Value -> Result Error (List Prediction)
 getPredictionsResult value =
     decodeValue predictionsDecoder value
-
-
-setPredictions : String -> Result Error (List Prediction) -> Result Error (List Prediction)
-setPredictions input predictionsResult =
-    -- Empties predictions list if input text field gets empty
-    if String.length input == 0 then
-        case predictionsResult of
-            Ok _ ->
-                Ok []
-
-            Err err ->
-                Err err
-
-    else
-        predictionsResult
