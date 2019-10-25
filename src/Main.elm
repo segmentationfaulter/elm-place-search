@@ -48,14 +48,15 @@ type alias Prediction =
     , place_id : String
     }
 
+
 type alias AfterQueryState =
-    {textInput: String
-    , predictions: Result Error (List Prediction)
+    { textInput : String
+    , predictions : Result Error (List Prediction)
     }
 
 
-type Model =
-    ReadyForFirstQuery
+type Model
+    = ReadyForFirstQuery
     | UserIsInteracting AfterQueryState
 
 
@@ -76,14 +77,22 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        InputChanged input -> case model of
-            ReadyForFirstQuery -> (UserIsInteracting (AfterQueryState input (Ok [])), askForPlacePredictions (Encode.string input))
-            UserIsInteracting afterQueryState -> (UserIsInteracting { afterQueryState | textInput = input }, askForPlacePredictions (Encode.string input))
-        GotPlacesPredictions predictionsValue -> case model of
-            ReadyForFirstQuery -> (ReadyForFirstQuery, Cmd.none)
-            UserIsInteracting afterQueryState -> (UserIsInteracting { afterQueryState | predictions = getPredictionsResult predictionsValue}, Cmd.none)
+        InputChanged input ->
+            case model of
+                ReadyForFirstQuery ->
+                    ( UserIsInteracting (AfterQueryState input (Ok [])), askForPlacePredictions (Encode.string input) )
 
-            
+                UserIsInteracting afterQueryState ->
+                    ( UserIsInteracting { afterQueryState | textInput = input }, askForPlacePredictions (Encode.string input) )
+
+        GotPlacesPredictions predictionsValue ->
+            case model of
+                ReadyForFirstQuery ->
+                    ( ReadyForFirstQuery, Cmd.none )
+
+                UserIsInteracting afterQueryState ->
+                    ( UserIsInteracting { afterQueryState | predictions = getPredictionsResult predictionsValue }, Cmd.none )
+
 
 
 -- View
@@ -108,8 +117,11 @@ renderAutoCompleteInput model =
             , Events.onInput InputChanged
             , Attr.value
                 (case model of
-                    ReadyForFirstQuery -> ""
-                    UserIsInteracting { textInput, predictions } -> textInput
+                    ReadyForFirstQuery ->
+                        ""
+
+                    UserIsInteracting { textInput, predictions } ->
+                        textInput
                 )
             ]
             []
