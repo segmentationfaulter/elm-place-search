@@ -103,6 +103,7 @@ view model =
     Html.div []
         [ Html.h1 [] [ Html.text "Find a place" ]
         , renderAutoCompleteInput model
+        , renderPlacePredictions model
         , Html.div [ Attr.id "map" ] []
         ]
 
@@ -126,6 +127,21 @@ renderAutoCompleteInput model =
             ]
             []
         ]
+
+
+renderPlacePredictions : Model -> Html.Html Msg
+renderPlacePredictions model =
+    case model of
+        ReadyForFirstQuery ->
+            Html.text ""
+
+        UserIsInteracting { predictions } ->
+            case predictions of
+                Ok predictionsList ->
+                    Html.div [] (List.map (\{ description } -> Html.div [] [ Html.text description ]) predictionsList)
+
+                Err _ ->
+                    Html.text "Houston, we have a problem!"
 
 
 
