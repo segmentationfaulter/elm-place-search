@@ -82,8 +82,8 @@ update msg model =
                 ReadyForFirstQuery ->
                     ( UserIsInteracting (AfterQueryState input (Ok [])), askForPlacePredictions (Encode.string input) )
 
-                UserIsInteracting afterQueryState ->
-                    ( UserIsInteracting { afterQueryState | textInput = input }, askForPlacePredictions (Encode.string input) )
+                UserIsInteracting { predictions } ->
+                    ( UserIsInteracting { textInput = input, predictions = setPredictions input predictions }, askForPlacePredictions (Encode.string input) )
 
         GotPlacesPredictions predictionsValue ->
             case model of
@@ -138,10 +138,9 @@ renderPlacePredictions model =
         UserIsInteracting { predictions, textInput } ->
             case predictions of
                 Ok predictionsList ->
-                    if
-                        (String.length textInput) > 0
-                    then
+                    if String.length textInput > 0 then
                         Html.div [] (List.map (\{ description } -> Html.div [] [ Html.text description ]) predictionsList)
+
                     else
                         Html.text ""
 
@@ -221,3 +220,18 @@ getPlaceResult value =
 getPredictionsResult : Encode.Value -> Result Error (List Prediction)
 getPredictionsResult value =
     decodeValue predictionsDecoder value
+
+
+setPredictions : String -> Result Error (List Prediction) -> Result Error (List Prediction)
+setPredictions input predictionsResult =
+    -- Empties predictions list if input text field gets empty
+    if String.length input == 0 then
+        case predictionsResult of
+            Ok _ ->
+                Ok []
+
+            Err err ->
+                Err err
+
+    else
+        predictionsResult
