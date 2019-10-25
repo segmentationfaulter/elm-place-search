@@ -135,10 +135,15 @@ renderPlacePredictions model =
         ReadyForFirstQuery ->
             Html.text ""
 
-        UserIsInteracting { predictions } ->
+        UserIsInteracting { predictions, textInput } ->
             case predictions of
                 Ok predictionsList ->
-                    Html.div [] (List.map (\{ description } -> Html.div [] [ Html.text description ]) predictionsList)
+                    if
+                        (String.length textInput) > 0
+                    then
+                        Html.div [] (List.map (\{ description } -> Html.div [] [ Html.text description ]) predictionsList)
+                    else
+                        Html.text ""
 
                 Err _ ->
                     Html.text "Houston, we have a problem!"
