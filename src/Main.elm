@@ -181,7 +181,7 @@ renderPlacePredictions model =
                             Html.text ""
 
                     Err _ ->
-                        Html.text "Houston, we have a problem!"
+                        Html.text "We got some suggestions to show, but we failed to decode them properly :-("
             else
                 Html.text ""
 
