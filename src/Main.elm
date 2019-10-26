@@ -31,18 +31,6 @@ init () =
 -- Modal
 
 
-type alias Location =
-    { lat : Float
-    , lng : Float
-    }
-
-
-type alias Place =
-    { name : String
-    , location : Location
-    }
-
-
 type alias Prediction =
     { description : String
     , place_id : String
@@ -114,11 +102,13 @@ update msg model =
                 UserIsInteracting afterQueryState ->
                     ( UserIsInteracting { afterQueryState | showPredictions = visible }, Cmd.none )
 
-        SelectPrediction { description, place_id } -> case model of
-            ReadyForFirstQuery -> (model, Cmd.none)
+        SelectPrediction { description, place_id } ->
+            case model of
+                ReadyForFirstQuery ->
+                    ( model, Cmd.none )
 
-            UserIsInteracting afterQueryState ->
-                (UserIsInteracting { afterQueryState | textInput = description, predictions = Ok []}, centerMap (Encode.string place_id))
+                UserIsInteracting afterQueryState ->
+                    ( UserIsInteracting { afterQueryState | textInput = description, predictions = Ok [] }, centerMap (Encode.string place_id) )
 
 
 
@@ -167,9 +157,7 @@ renderPlacePredictions model =
             Html.text ""
 
         UserIsInteracting { predictions, textInput, showPredictions } ->
-            if
-                showPredictions
-            then
+            if showPredictions then
                 case predictions of
                     Ok predictionsList ->
                         if String.length textInput > 0 then
@@ -182,6 +170,7 @@ renderPlacePredictions model =
 
                     Err _ ->
                         Html.text "We got some suggestions to show, but we failed to decode them properly :-("
+
             else
                 Html.text ""
 
@@ -199,45 +188,13 @@ subscriptions model =
 -- Decoders
 
 
-placeNameDecoder : Decoder String
-placeNameDecoder =
-    field "name" string
-
-
-locationDecoder : Decoder Location
-locationDecoder =
-    field "location" (map2 Location (field "lat" float) (field "lng" float))
-
-
-placeDecoder : Decoder Place
-placeDecoder =
-    map2 Place placeNameDecoder locationDecoder
-
-
 predictionsDecoder : Decoder (List Prediction)
 predictionsDecoder =
     list (map2 Prediction (field "description" string) (field "place_id" string))
 
 
 
--- Encoders
-
-
-encodeLocation : Location -> Encode.Value
-encodeLocation location =
-    Encode.object
-        [ ( "lat", Encode.float location.lat )
-        , ( "lng", Encode.float location.lng )
-        ]
-
-
-
 -- Helpers
-
-
-getPlaceResult : Encode.Value -> Result Error Place
-getPlaceResult value =
-    decodeValue placeDecoder value
 
 
 getPredictionsResult : Encode.Value -> Result Error (List Prediction)
