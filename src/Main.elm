@@ -74,6 +74,7 @@ type Msg
     = InputChanged String
     | GotPlacesPredictions Encode.Value
     | SetPredictionsVisibility Bool
+    | SelectPrediction String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -113,6 +114,12 @@ update msg model =
                 UserIsInteracting afterQueryState ->
                     ( UserIsInteracting { afterQueryState | showPredictions = visible }, Cmd.none )
 
+        SelectPrediction description -> case model of
+            ReadyForFirstQuery -> (model, Cmd.none)
+
+            UserIsInteracting afterQueryState ->
+                (UserIsInteracting { afterQueryState | textInput = description, predictions = Ok []}, Cmd.none)
+
 
 
 -- View
@@ -135,6 +142,8 @@ renderAutoCompleteInput model =
             [ Attr.type_ "text"
             , Attr.placeholder "Enter a location"
             , Attr.id "input-autocomplete"
+            , Attr.autofocus True
+            , Attr.autocomplete False
             , Events.onInput InputChanged
             , Events.onFocus (SetPredictionsVisibility True)
             , Events.onBlur (SetPredictionsVisibility False)
@@ -164,7 +173,9 @@ renderPlacePredictions model =
                 case predictions of
                     Ok predictionsList ->
                         if String.length textInput > 0 then
-                            Html.div [ Attr.class "predictions-list" ] (List.map (\{ description } -> Html.div [ Attr.class "predictions-item" ] [ Html.text description ]) predictionsList)
+                            Html.div
+                                [ Attr.class "predictions-list" ]
+                                (List.map (\{ description } -> Html.div [ Attr.class "predictions-item", Events.onMouseDown (SelectPrediction description) ] [ Html.text description ]) predictionsList)
 
                         else
                             Html.text ""
