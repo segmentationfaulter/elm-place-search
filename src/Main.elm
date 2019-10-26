@@ -74,7 +74,7 @@ type Msg
     = InputChanged String
     | GotPlacesPredictions Encode.Value
     | SetPredictionsVisibility Bool
-    | SelectPrediction String
+    | SelectPrediction Prediction
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -114,11 +114,11 @@ update msg model =
                 UserIsInteracting afterQueryState ->
                     ( UserIsInteracting { afterQueryState | showPredictions = visible }, Cmd.none )
 
-        SelectPrediction description -> case model of
+        SelectPrediction { description, place_id } -> case model of
             ReadyForFirstQuery -> (model, Cmd.none)
 
             UserIsInteracting afterQueryState ->
-                (UserIsInteracting { afterQueryState | textInput = description, predictions = Ok []}, Cmd.none)
+                (UserIsInteracting { afterQueryState | textInput = description, predictions = Ok []}, centerMap (Encode.string place_id))
 
 
 
@@ -175,7 +175,7 @@ renderPlacePredictions model =
                         if String.length textInput > 0 then
                             Html.div
                                 [ Attr.class "predictions-list" ]
-                                (List.map (\{ description } -> Html.div [ Attr.class "predictions-item", Events.onMouseDown (SelectPrediction description) ] [ Html.text description ]) predictionsList)
+                                (List.map (\{ description, place_id } -> Html.div [ Attr.class "predictions-item", Events.onMouseDown (SelectPrediction (Prediction description place_id)) ] [ Html.text description ]) predictionsList)
 
                         else
                             Html.text ""
