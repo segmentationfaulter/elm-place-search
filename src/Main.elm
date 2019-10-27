@@ -4,7 +4,7 @@ import Browser
 import Html
 import Html.Attributes as Attr
 import Html.Events as Events
-import Json.Decode exposing (Decoder, Error, decodeValue, field, float, list, map2, string)
+import Json.Decode as Decode
 import Json.Encode as Encode
 import Maps exposing (askForPlacePredictions, centerMap, fetchPlacesPredictions)
 
@@ -39,7 +39,7 @@ type alias Prediction =
 
 type alias AfterQueryState =
     { textInput : String
-    , predictions : Result Error (List Prediction)
+    , predictions : Result Decode.Error (List Prediction)
     , showPredictions : Bool
     }
 
@@ -188,15 +188,15 @@ subscriptions model =
 -- Decoders
 
 
-predictionsDecoder : Decoder (List Prediction)
+predictionsDecoder : Decode.Decoder (List Prediction)
 predictionsDecoder =
-    list (map2 Prediction (field "description" string) (field "place_id" string))
+    Decode.list (Decode.map2 Prediction (Decode.field "description" Decode.string) (Decode.field "place_id" Decode.string))
 
 
 
 -- Helpers
 
 
-getPredictionsResult : Encode.Value -> Result Error (List Prediction)
+getPredictionsResult : Encode.Value -> Result Decode.Error (List Prediction)
 getPredictionsResult value =
-    decodeValue predictionsDecoder value
+    Decode.decodeValue predictionsDecoder value
