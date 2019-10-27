@@ -37,7 +37,7 @@ type alias Prediction =
     }
 
 
-type alias AfterQueryState =
+type alias StateAfterUserStartsInteraction =
     { textInput : String
     , predictions : Result Decode.Error (List Prediction)
     , showPredictions : Bool
@@ -46,7 +46,7 @@ type alias AfterQueryState =
 
 type Model
     = ReadyForFirstQuery
-    | UserIsInteracting AfterQueryState
+    | UserIsInteracting StateAfterUserStartsInteraction
 
 
 initialModel : Model
@@ -71,44 +71,44 @@ update msg model =
         InputChanged input ->
             case model of
                 ReadyForFirstQuery ->
-                    ( UserIsInteracting (AfterQueryState input (Ok []) True), askForPlacePredictions (Encode.string input) )
+                    ( UserIsInteracting (StateAfterUserStartsInteraction input (Ok []) True), askForPlacePredictions (Encode.string input) )
 
-                UserIsInteracting afterQueryState ->
+                UserIsInteracting stateAfterUserStartsInteraction ->
                     case input of
                         "" ->
-                            case afterQueryState.predictions of
+                            case stateAfterUserStartsInteraction.predictions of
                                 Ok _ ->
-                                    ( UserIsInteracting (AfterQueryState input (Ok []) True), Cmd.none )
+                                    ( UserIsInteracting (StateAfterUserStartsInteraction input (Ok []) True), Cmd.none )
 
                                 Err _ ->
-                                    ( UserIsInteracting { afterQueryState | textInput = input }, Cmd.none )
+                                    ( UserIsInteracting { stateAfterUserStartsInteraction | textInput = input }, Cmd.none )
 
                         _ ->
-                            ( UserIsInteracting { afterQueryState | textInput = input }, askForPlacePredictions (Encode.string input) )
+                            ( UserIsInteracting { stateAfterUserStartsInteraction | textInput = input }, askForPlacePredictions (Encode.string input) )
 
         GotPlacesPredictions predictionsValue ->
             case model of
                 ReadyForFirstQuery ->
                     ( ReadyForFirstQuery, Cmd.none )
 
-                UserIsInteracting afterQueryState ->
-                    ( UserIsInteracting { afterQueryState | predictions = getPredictionsResult predictionsValue }, Cmd.none )
+                UserIsInteracting stateAfterUserStartsInteraction ->
+                    ( UserIsInteracting { stateAfterUserStartsInteraction | predictions = getPredictionsResult predictionsValue }, Cmd.none )
 
         SetPredictionsVisibility visible ->
             case model of
                 ReadyForFirstQuery ->
                     ( ReadyForFirstQuery, Cmd.none )
 
-                UserIsInteracting afterQueryState ->
-                    ( UserIsInteracting { afterQueryState | showPredictions = visible }, Cmd.none )
+                UserIsInteracting stateAfterUserStartsInteraction ->
+                    ( UserIsInteracting { stateAfterUserStartsInteraction | showPredictions = visible }, Cmd.none )
 
         SelectPrediction { description, place_id } ->
             case model of
                 ReadyForFirstQuery ->
                     ( model, Cmd.none )
 
-                UserIsInteracting afterQueryState ->
-                    ( UserIsInteracting { afterQueryState | textInput = description, predictions = Ok [] }, centerMap (Encode.string place_id) )
+                UserIsInteracting stateAfterUserStartsInteraction ->
+                    ( UserIsInteracting { stateAfterUserStartsInteraction | textInput = description, predictions = Ok [] }, centerMap (Encode.string place_id) )
 
 
 
